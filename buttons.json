@@ -30,5 +30,37 @@
   {
     "name": "Emotional Damage3",
     "soundPath": "/sounds/emotional-dmg.ogg"
+  },
+  {
+    "name": "Not Again4",
+    "soundPath": "/sounds/awwwwwww.ogg"
+  },
+  {
+    "name": "Emotional Damage4",
+    "soundPath": "/sounds/emotional-dmg.ogg"
+  },
+  {
+    "name": "Not Again5",
+    "soundPath": "/sounds/awwwwwww.ogg"
+  },
+  {
+    "name": "Emotional Damage5",
+    "soundPath": "/sounds/emotional-dmg.ogg"
+  },
+  {
+    "name": "Not Again6",
+    "soundPath": "/sounds/awwwwwww.ogg"
+  },
+  {
+    "name": "Emotional Damage6",
+    "soundPath": "/sounds/emotional-dmg.ogg"
+  },
+  {
+    "name": "Not Again7",
+    "soundPath": "/sounds/awwwwwww.ogg"
+  },
+  {
+    "name": "Emotional Damage7",
+    "soundPath": "/sounds/emotional-dmg.ogg"
   }
 ]
