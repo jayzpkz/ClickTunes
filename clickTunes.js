@@ -4,8 +4,7 @@ const volume = document.querySelector('#volume');
 const buttonsContainer = document.querySelector('#buttonsContainer');
 const tooltip = document.querySelector('#tooltip');
 const removeButton = document.querySelector('#removeButton');
-// const canvas = document.querySelector('#visualizer');
-// const canvasCtx = canvas.getContext('2d');
+const addButton = document.querySelector('#addButton');
 
 // variables
 let isSoundPlaying = false;
@@ -102,6 +101,41 @@ function updateVolumeBackground() {
   volume.style.background = `linear-gradient(to right, #062E6F ${adjustedPercentage}%, #A8C7FA ${adjustedPercentage}%)`;
 }
 
+function handleOpenAddButtonModal() {
+  addButton.disabled = true;
+  
+  
+  const modalContainer = document.createElement('div');
+  modalContainer.classList.add('add-button-modal-container');
+
+  const modalBackdrop = document.createElement('div');
+  modalBackdrop.classList.add('add-button-modal-backdrop');
+  modalBackdrop.addEventListener('click', () => {
+    document.body.removeChild(modalContainer);
+    document.body.removeChild(modalBackdrop);
+    addButton.disabled = false;
+  });
+
+  const modal = document.createElement('div');
+  modal.classList.add('add-button-modal');
+  
+  const modalCloseButton = document.createElement('button');
+  modalCloseButton.classList.add('add-button-modal-close-btn');
+  modalCloseButton.addEventListener('click', () => {
+    document.body.removeChild(modalContainer);
+    document.body.removeChild(modalBackdrop);
+    addButton.disabled = false;
+  });
+  const modalCloseButtonText = document.createElement("span");
+  modalCloseButtonText.textContent = "X";
+
+  modalCloseButton.appendChild(modalCloseButtonText);
+  modal.appendChild(modalCloseButton);
+  modalContainer.appendChild(modal);
+  document.body.appendChild(modalBackdrop);
+  document.body.appendChild(modalContainer);
+}
+
 // event listeners
 filter.addEventListener('input', filterButtons);
 
@@ -142,6 +176,8 @@ volume.addEventListener('mouseleave', () => {
 });
 
 removeButton.addEventListener('click', toggleButtonDelete);
+
+addButton.addEventListener('click', handleOpenAddButtonModal);
 
 // execution
 updateVolumeBackground();
