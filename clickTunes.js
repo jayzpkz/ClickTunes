@@ -29,6 +29,8 @@ function toggleButtonDelete() {
 }
 
 function createButton(buttonObj) {
+  const buttonContainer = document.createElement("div");
+  buttonContainer.classList.add("button-container");
   const button = document.createElement("button");
   button.name = buttonObj.name.replace(" ", "");
   button.dataset.name = buttonObj.name;
@@ -57,15 +59,18 @@ function createButton(buttonObj) {
     });
   });
 
-  const deleteBtn = document.createElement("span");
-  deleteBtn.textContent = "X";
+  const deleteBtn = document.createElement("button");
   deleteBtn.classList.add('delete-btn');
   deleteBtn.dataset.name = buttonObj;
   deleteBtn.addEventListener('click', handleDeleteButton);
+  const deleteBtnText = document.createElement("span");
+  deleteBtnText.textContent = "X";
 
-  button.appendChild(deleteBtn);
+  deleteBtn.appendChild(deleteBtnText);
+  buttonContainer.appendChild(button);
+  buttonContainer.appendChild(deleteBtn);
 
-  buttonsContainer.appendChild(button);
+  buttonsContainer.appendChild(buttonContainer);
 }
 
 function filterButtons() {
