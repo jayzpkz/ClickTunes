@@ -21,9 +21,13 @@ function toggleButtonDelete() {
 
   removeButton.textContent = isDeleteModeOn ? "Cancel" : "Remove Button"
 
-  const deleteButtons = document.querySelectorAll('.delete-btn');
-  deleteButtons.forEach(button => {
-    button.style.display = isDeleteModeOn ? "block" : "none";
+  const deleteButtonContainers = document.querySelectorAll('.button-container');
+  deleteButtonContainers.forEach(container => {
+    const button = container.querySelector('.button');
+    button.classList.toggle('tremble-in-fear');
+
+    const deleteButton = container.querySelector('.delete-btn');
+    deleteButton.style.display = isDeleteModeOn ? "block" : "none";
   });
 }
 
@@ -60,7 +64,7 @@ function createButton(buttonObj) {
 
   const deleteBtn = document.createElement("button");
   deleteBtn.classList.add('delete-btn');
-  deleteBtn.dataset.name = buttonObj;
+  deleteBtn.dataset.name = buttonObj.name;
   deleteBtn.addEventListener('click', handleDeleteButton);
   const deleteBtnText = document.createElement("span");
   deleteBtnText.textContent = "X";
