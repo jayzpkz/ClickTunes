@@ -50,6 +50,15 @@ body {
   outline: 1px solid #a8c7fa;
 }
 
+.error-text {
+  padding: 10px;
+  text-align: center;
+  color: tomato;
+  display: none;
+  margin: 0;
+  border: 1px solid tomato;
+}
+
 .buttons-container {
   overflow-y: auto;
   /* width: calc(100% - 20px); */
@@ -99,6 +108,10 @@ body {
 .delete-btn:hover {
   color: white;
   background-color: #e3e3e314;
+}
+
+.delete-mode-on {
+  display: block;
 }
 
 .visualizer-container {
@@ -160,6 +173,10 @@ input[type="range"]::-ms-thumb {
   font-size: 12px;
   display: none; /* Hidden by default */
   pointer-events: none; /* Prevent the tooltip from blocking interactions */
+}
+
+.display-tooltip {
+  display: block;
 }
 
 .edit-buttons-container {
