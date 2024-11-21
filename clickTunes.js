@@ -67,9 +67,111 @@ function openAddButtonModal() {
     },
   });
 
+  const soundNameInput = createHtmlElement("input", {
+    attributes: {
+      class: "add-button-sound-name-input",
+      type: "text",
+      placeholder: "Sound Name",
+    },
+  });
+
+  const soundFileLabel = createHtmlElement("label", {
+    attributes: {
+      class: "add-button-sound-file-label",
+      type: "file",
+      for: "sound-file-input"
+    },
+    children: ["Choose a file"],
+  });
+
+  const soundFileInput = createHtmlElement("input", {
+    attributes: {
+      class: "add-button-sound-file-input",
+      type: "file",
+      id: "sound-file-input"
+    },
+  });
+
+  const messageContainer = createHtmlElement("div", {
+    attributes: { class: "add-button-message-container" },
+  });
+
+  const formSubmitBtn = createHtmlElement("button", {
+    attributes: {
+      class: "add-button-submit-btn",
+      type: "button",
+    },
+    children: ["Add Sound"],
+    eventListeners: {
+      click: (event) => {
+        event.preventDefault();
+
+        const soundName = soundNameInput.value.trim();
+        const soundFile = soundFileInput.files[0]; // Access the first file
+
+        // Reset message container
+        messageContainer.textContent = "";
+        messageContainer.classList.remove("success", "error");
+
+        // Validate the sound name
+        if (!soundName || (soundName.length < 2 && soundName.length > 15)) {
+          messageContainer.textContent = "The sound name must be between 2 and 15 characters long.";
+          messageContainer.classList.add("error");
+          return;
+        }
+
+        // Validate the file input
+        if (!soundFile) {
+          messageContainer.textContent = "Please select a sound file.";
+          messageContainer.classList.add("error");
+          return;
+        }
+
+        // Check file type
+        const validFileTypes = ["audio/mpeg", "audio/wav", "audio/ogg"];
+        if (!validFileTypes.includes(soundFile.type)) {
+          messageContainer.textContent = "Unsupported file type. Please upload an MP3, WAV, or OGG file.";
+          messageContainer.classList.add("error");
+          return;
+        }
+
+        // Use FileReader to read the file data
+        const reader = new FileReader();
+        reader.onload = (fileEvent) => {
+          const fileData = fileEvent.target.result; // Base64 encoded file data
+
+          // Save the sound to IndexedDB
+          addSound({ name: soundName, soundPath: fileData })
+            .then(() => {
+              messageContainer.textContent = "Sound added successfully!";
+              messageContainer.classList.add("success");
+            })
+            .catch((error) => {
+              console.error("Error adding sound:", error);
+              messageContainer.textContent = "Failed to add sound. Please try again.";
+              messageContainer.classList.add("error");
+            });
+        };
+
+        reader.readAsDataURL(soundFile); // Convert the file to a Base64 string
+      },
+    },
+  });
+
+  const form = createHtmlElement("form", {
+    attributes: { class: "add-button-form" },
+    children: [
+      soundNameInput, 
+      soundFileLabel, 
+      soundFileInput, 
+      formSubmitBtn, 
+      messageContainer
+    ],
+  });
+
   const modal = createHtmlElement("div", {
     attributes: { class: "add-button-modal" },
-    children: [modalCloseButton],
+    children: [modalCloseButton, form],
   });
 
   const modalContainer = createHtmlElement("div", {

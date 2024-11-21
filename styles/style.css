@@ -61,7 +61,6 @@ body {
 
 .buttons-container {
   overflow-y: auto;
-  /* width: calc(100% - 20px); */
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -131,7 +130,7 @@ input[type="range"] {
   width: 100%;
   height: 8px;
   border-radius: 5px;
-  background: #a8c7fa; /* Default background, will be overridden by JavaScript */
+  background: #a8c7fa;
   outline: none;
   transition: background 0.3s ease;
 }
@@ -171,8 +170,8 @@ input[type="range"]::-ms-thumb {
   padding: 5px;
   border-radius: 5px;
   font-size: 12px;
-  display: none; /* Hidden by default */
-  pointer-events: none; /* Prevent the tooltip from blocking interactions */
+  display: none;
+  pointer-events: none;
 }
 
 .display-tooltip {
@@ -198,6 +197,10 @@ input[type="range"]::-ms-thumb {
   width: 91px;
 }
 
+.add-button:hover {
+  background-color: #38393b;
+}
+
 .add-button:disabled {
   cursor: auto;
   pointer-events: none;
@@ -219,6 +222,10 @@ input[type="range"]::-ms-thumb {
   width: 91px;
 }
 
+.remove-button:hover {
+  background-color: #38393b;
+}
+
 .add-button-modal-backdrop {
   position: absolute;
   top: 0;
@@ -237,24 +244,113 @@ input[type="range"]::-ms-thumb {
   align-items: center;
   justify-content: center;
   z-index: 1;
+  width: 85%;
+  height: 200px;
 }
 
 .add-button-modal {
   position: relative;
   width: 100%;
   height: 100%;
-  width: 150px;
-  height: 100px;
   background-color: #292a2d;
   box-shadow: color-mix(in srgb, black 30%, transparent) 0 1px 2px 0,
     color-mix(in srgb, black 15%, transparent) 0 2px 6px 2px;
   border-radius: 8px;
+  margin: auto;
+}
+
+.add-button-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+  padding: 25px 0 0 0;
+}
+
+.add-button-sound-name-input {
+  border-radius: 15px;
+  border: 1px solid #282828;
+  padding: 6.5px 10px;
+  width: 109px;
+  box-sizing: border-box;
+  background-color: #282828;
+  color: #c0c1c1;
+  text-align: center;
+}
+
+.add-button-sound-name-input::placeholder {
+  color: #c0c1c1;
+}
+
+.add-button-sound-name-input:hover {
+  background-color: #373737;
+}
+
+.add-button-sound-name-input:focus-visible {
+  background-color: #282828;
+  outline: 1px solid #a8c7fa;
+}
+
+.add-button-sound-file-label {
+  cursor: pointer;
+  background-color: #292a2d;
+  color: #99b4e1;
+  border: 1px solid #047db7;
+  padding: 4px 8px;
+  border-radius: 100px;
+  line-height: 20px;
+  font-size: 81.25%;
+  font-weight: 600;
+  width: 91px;
+  text-align: center;
+}
+
+.add-button-sound-file-label:hover {
+  background-color: #38393b;
+}
+
+.add-button-sound-file-input {
+  display: none;
+}
+
+.add-button-submit-btn {
+  cursor: pointer;
+  background-color: #292a2d;
+  color: #99b4e1;
+  border: 1px solid #047db7;
+  padding: 4px 8px;
+  border-radius: 100px;
+  line-height: 20px;
+  font-size: 81.25%;
+  font-weight: 600;
+  width: 109px;
+  text-align: center;
+}
+
+.add-button-submit-btn:hover {
+  background-color: #38393b;
+}
+
+.add-button-message-container {
+  text-align: center;
+  padding: 0 15px;
+  position: absolute;
+  bottom: 10px;
+}
+
+.add-button-message-container.success {
+  color: #4caf50;
+}
+
+.add-button-message-container.error {
+  color: #f44336;
 }
 
 .add-button-modal-close-btn {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 5px;
+  right: 5px;
   color: #ccc;
   cursor: pointer;
   font-size: 11px;
@@ -274,42 +370,42 @@ input[type="range"]::-ms-thumb {
 /* Scroller styles */
 /* Webkit Browsers (Chrome, Safari) */
 ::-webkit-scrollbar {
-  width: 12px; /* Width of the scrollbar */
-  height: 12px; /* Height of the scrollbar */
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #333; /* Background of the scrollbar track */
-  border-radius: 6px; /* Rounded corners for the track */
+  background: #333;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #555; /* Color of the scrollbar thumb */
-  border-radius: 6px; /* Rounded corners for the thumb */
+  background-color: #555;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #777; /* Thumb color on hover */
+  background-color: #777;
 }
 
 /* Firefox */
 * {
-  scrollbar-width: thin; /* Makes the scrollbar thinner */
-  scrollbar-color: #555 #333; /* Thumb color and track color */
+  scrollbar-width: thin;
+  scrollbar-color: #555 #333;
 }
 
 /* For Edge and Internet Explorer */
 ::-ms-scrollbar {
-  width: 12px; /* Width of the scrollbar */
+  width: 12px;
 }
 
 ::-ms-scrollbar-track {
-  background: #333; /* Background of the scrollbar track */
+  background: #333;
 }
 
 ::-ms-scrollbar-thumb {
-  background-color: #555; /* Color of the scrollbar thumb */
-  border-radius: 6px; /* Rounded corners for the thumb */
+  background-color: #555;
+  border-radius: 6px;
 }
 
 /* Keyframes for shaking animation */
