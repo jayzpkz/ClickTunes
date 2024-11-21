@@ -1,3 +1,7 @@
+// Imports
+import { openDatabase, addSound, getAllSounds } from "./scripts/storage.js";
+import { debounce, showError, createHtmlElement } from "./scripts/utils.js";
+
 // Constants
 
 const TOOLTIP_OFFSET_X = 10;
@@ -5,13 +9,15 @@ const TOOLTIP_OFFSET_Y = 40;
 
 // HTML Elements
 
-const filter = document.querySelector('#filter');
-const errorText = document.querySelector('.error-text');
-const volume = document.querySelector('#volume');
-const buttonsContainer = document.querySelector('#buttonsContainer');
-const tooltip = document.querySelector('#tooltip');
-const removeButton = document.querySelector('#removeButton');
-const addButton = document.querySelector('#addButton');
+const elements = {
+  filter: document.querySelector('#filter'),
+  errorText: document.querySelector('.error-text'),
+  volume: document.querySelector('#volume'),
+  buttonsContainer: document.querySelector('#buttonsContainer'),
+  tooltip: document.querySelector('#tooltip'),
+  removeButton: document.querySelector('#removeButton'),
+  addButton: document.querySelector('#addButton'),
+};
 
 // Global State Variables
 
@@ -19,33 +25,6 @@ const globalState = {
   isSoundPlaying: false,
   currentAudio: null,
   isDeleteModeOn: false,
-}
-
-// Utility Functions
-
-/**
- * Delays function execution to reduce unnecessary function executions.
- * 
- * @param {Function} fn - The function to debounce.
- * @param {number} delay - The time in milliseconds to wait before executing the function.
- * @returns {Function} A debounced version of the input function.
- */
-function debounce(fn, delay) {
-  let timeoutId;
-  return function(...args) {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-}
-
-/**
- * Displays an error message in the error text element.
- * 
- * @param {string} errorMsg - The error message to display.
- */
-function showError(errorMsg) {
-  errorText.style.display = "block";
-  errorText.textContent = errorMsg;
 }
 
 // Modal Functions
@@ -65,33 +44,39 @@ function closeAddButtonModal(modalContainer, modalBackdrop) {
  * Opens the add button modal and disables the add button.
  */
 function openAddButtonModal() {
-  addButton.disabled = true;
-  
-  const modalContainer = document.createElement('div');
-  modalContainer.classList.add('add-button-modal-container');
+  elements.addButton.disabled = true;
 
-  const modalBackdrop = document.createElement('div');
-  modalBackdrop.classList.add('add-button-modal-backdrop');
-  modalBackdrop.addEventListener('click', () => {
-    closeAddButtonModal(modalContainer, modalBackdrop);
-    addButton.disabled = false;
+  const modalBackdrop = createHtmlElement("div", {
+    attributes: { class: "add-button-modal-backdrop" },
+    eventListeners: {
+      click: () => {
+        closeAddButtonModal(modalContainer, modalBackdrop);
+        elements.addButton.disabled = false;
+      },
+    },
   });
 
-  const modal = document.createElement('div');
-  modal.classList.add('add-button-modal');
-  
-  const modalCloseButton = document.createElement('button');
-  modalCloseButton.classList.add('add-button-modal-close-btn');
-  modalCloseButton.addEventListener('click', () => {
-    closeAddButtonModal(modalContainer, modalBackdrop);
-    addButton.disabled = false;
+  const modalCloseButton = createHtmlElement("button", {
+    attributes: { class: "add-button-modal-close-btn" },
+    children: ["X"],
+    eventListeners: {
+      click: () => {
+        closeAddButtonModal(modalContainer, modalBackdrop);
+        elements.addButton.disabled = false;
+      },
+    },
   });
-  const modalCloseButtonText = document.createElement("span");
-  modalCloseButtonText.textContent = "X";
 
-  modalCloseButton.appendChild(modalCloseButtonText);
-  modal.appendChild(modalCloseButton);
-  modalContainer.appendChild(modal);
+  const modal = createHtmlElement("div", {
+    attributes: { class: "add-button-modal" },
+    children: [modalCloseButton],
+  });
+
+  const modalContainer = createHtmlElement("div", {
+    attributes: { class: "add-button-modal-container" },
+    children: [modal],
+  });
+
   document.body.appendChild(modalBackdrop);
   document.body.appendChild(modalContainer);
 }
@@ -109,7 +94,7 @@ function handleDeleteButtonClick() {
 function toggleButtonDelete() {
   globalState.isDeleteModeOn = !globalState.isDeleteModeOn;
 
-  removeButton.textContent = globalState.isDeleteModeOn ? "Cancel" : "Remove Button"
+  elements.removeButton.textContent = globalState.isDeleteModeOn ? "Cancel" : "Remove Button"
 
   const deleteButtonContainers = document.querySelectorAll('.button-container');
   deleteButtonContainers.forEach(container => {
@@ -127,7 +112,7 @@ function toggleButtonDelete() {
  */
 function setVolume(audio) {
   if (!audio) return; // Guard clause to handle null audio
-  const currentVolume = volume.value;
+  const currentVolume = elements.volume.value;
   audio.volume = currentVolume > 0 ? currentVolume / 100 : 0;
 }
 
@@ -142,46 +127,60 @@ function setVolume(audio) {
  * @param {string} buttonObj.soundPath - The path to the sound file.
  */
 function createButton(buttonObj) {
-  const buttonContainer = document.createElement("div");
-  buttonContainer.dataset.name = buttonObj.name;
-  buttonContainer.classList.add("button-container");
-  const button = document.createElement("button");
-  button.name = buttonObj.name.replace(" ", "");
-  button.dataset.name = buttonObj.name;
-  button.textContent = buttonObj.name;
-  button.ariaLabel = `Play Sound for "${buttonObj.name}" button`;
-  button.classList.add("button");
-  button.addEventListener("click", () => {
-    if (globalState.isSoundPlaying) return; // Prevent action if a sound is currently playing
+  const button = createHtmlElement("button", {
+    attributes: {
+      name: buttonObj.name.replace(" ", ""),
+      "data-name": buttonObj.name,
+      "aria-label": `Play Sound for "${buttonObj.name}" button`,
+      class: "button",
+    },
+    children: [buttonObj.name],
+    eventListeners: {
+      click: () => {
+        if (globalState.isSoundPlaying) return;
 
-    globalState.isSoundPlaying = true;
-    button.disabled = true; // Disable the button when sound starts playing
+        globalState.isSoundPlaying = true;
+        button.disabled = true;
 
-    const sound = new Audio(buttonObj.soundPath);
-    setVolume(globalState.currentAudio);
-    sound.play();
-    globalState.currentAudio = sound;
+        const sound = new Audio(buttonObj.soundPath);
+        setVolume(globalState.currentAudio);
+        sound.play();
+        globalState.currentAudio = sound;
 
-    sound.addEventListener('ended', () => {
-      globalState.isSoundPlaying = false;
-      button.disabled = false; // Re-enable the button when sound ends
-      globalState.currentAudio = null; // Clear the reference when audio ends
-    });
+        sound.addEventListener("ended", () => {
+          globalState.isSoundPlaying = false;
+          button.disabled = false;
+          globalState.currentAudio = null;
+        });
+      },
+    },
   });
 
-  const deleteBtn = document.createElement("button");
-  deleteBtn.classList.add('delete-btn');
-  deleteBtn.dataset.name = buttonObj.name;
-  deleteBtn.ariaLabel = `Delete "${buttonObj.name}" button`;
-  deleteBtn.addEventListener('click', handleDeleteButtonClick);
-  const deleteBtnText = document.createElement("span");
-  deleteBtnText.textContent = "X";
+  // const deleteBtnText = createHtmlElement("span", {
+  //   children: ["X"],
+  // });
 
-  deleteBtn.appendChild(deleteBtnText);
-  buttonContainer.appendChild(button);
-  buttonContainer.appendChild(deleteBtn);
+  const deleteBtn = createHtmlElement("button", {
+    attributes: {
+      class: "delete-btn",
+      "data-name": buttonObj.name,
+      "aria-label": `Delete "${buttonObj.name}" button`,
+    },
+    children: [createHtmlElement("span", { children: ["X"] })], // deleteBtnText
+    eventListeners: {
+      click: () => handleDeleteButtonClick,
+    },
+  });
 
-  buttonsContainer.appendChild(buttonContainer);
+  const buttonContainer = createHtmlElement("div", {
+    attributes: {
+      "data-name": buttonObj.name,
+      class: "button-container",
+    },
+    children: [button, deleteBtn],
+  });
+
+  elements.buttonsContainer.appendChild(buttonContainer);
 }
 
 /**
@@ -189,7 +188,7 @@ function createButton(buttonObj) {
  * Only shows button containers that include the filter value in their name.
  */
 function filterButtons() {
-  const filterValue = filter.value.toLowerCase();
+  const filterValue = elements.filter.value.toLowerCase();
   const buttonContainers = document.querySelectorAll('.button-container');
 
   buttonContainers.forEach(buttonContainer => {
@@ -208,9 +207,9 @@ function filterButtons() {
  * volume level, while the unfilled part shows the remaining range.
  */
 function updateVolumeBackground() {
-  const value = volume.value;
-  const min = volume.min || 0;
-  const max = volume.max || 100;
+  const value = elements.volume.value;
+  const min = elements.volume.min || 0;
+  const max = elements.volume.max || 100;
 
   // Calculate the percentage of the slider's current value
   const percentage = ((value - min) / (max - min)) * 100;
@@ -219,52 +218,52 @@ function updateVolumeBackground() {
   const adjustedPercentage = percentage <= 5 ? 5 : percentage;
 
   // Apply the background using a linear gradient to show the filled part and unfilled part
-  volume.style.background = `linear-gradient(to right, #062E6F ${adjustedPercentage}%, #A8C7FA ${adjustedPercentage}%)`;
+  elements.volume.style.background = `linear-gradient(to right, #062E6F ${adjustedPercentage}%, #A8C7FA ${adjustedPercentage}%)`;
 }
 
 // Event Listeners
 
 // Add an input event listener to the filter, debounced to reduce unnecessary calls
-filter.addEventListener('input', debounce(filterButtons, 300));
+elements.filter.addEventListener('input', debounce(filterButtons, 300));
 
 // Add an input event listener to the volume slider to update the volume background
 // and set the current audio volume when the slider value changes
-volume.addEventListener('input', () => {
+elements.volume.addEventListener('input', () => {
   updateVolumeBackground();
   setVolume(globalState.currentAudio);
 });
 
 // Add a mousemove event listener to the volume slider to display the tooltip
 // showing the current volume percentage, positioning it based on mouse cursor location
-volume.addEventListener('mousemove', (e) => {
-  tooltip.classList.add("display-tooltip");
-  tooltip.textContent = `Volume: ${volume.value}%`;
+elements.volume.addEventListener('mousemove', (e) => {
+  elements.tooltip.classList.add("display-tooltip");
+  elements.tooltip.textContent = `Volume: ${elements.volume.value}%`;
 
   // Get the width of the volume slider and the midpoint
-  const volumeRect = volume.getBoundingClientRect();
+  const volumeRect = elements.volume.getBoundingClientRect();
   const volumeMidpoint = volumeRect.left + volumeRect.width / 2;
 
   if (e.clientX > volumeMidpoint) {
     // If mouse is on the right half of the slider, position tooltip on the left of the cursor
-    tooltip.style.left = `${e.pageX - tooltip.offsetWidth - TOOLTIP_OFFSET_X }px`; // Offset to the left of the cursor
+    elements.tooltip.style.left = `${e.pageX - elements.tooltip.offsetWidth - TOOLTIP_OFFSET_X }px`; // Offset to the left of the cursor
   } else {
     // If mouse is on the left half of the slider, position tooltip on the right of the cursor
-    tooltip.style.left = `${e.pageX + TOOLTIP_OFFSET_X }px`; // Offset to the right of the cursor
+    elements.tooltip.style.left = `${e.pageX + TOOLTIP_OFFSET_X }px`; // Offset to the right of the cursor
   }
 
-  tooltip.style.top = `${e.pageY - TOOLTIP_OFFSET_Y }px`; // Offset above cursor
+  elements.tooltip.style.top = `${e.pageY - TOOLTIP_OFFSET_Y }px`; // Offset above cursor
 });
 
 // Hide the tooltip when the mouse leaves the slider
-volume.addEventListener('mouseleave', () => {
-  tooltip.classList.remove("display-tooltip");
+elements.volume.addEventListener('mouseleave', () => {
+  elements.tooltip.classList.remove("display-tooltip");
 });
 
 // Add a click event listener to the remove button to toggle delete mode
-removeButton.addEventListener('click', toggleButtonDelete);
+elements.removeButton.addEventListener('click', toggleButtonDelete);
 
 // Add a click event listener to the add button to open the modal for adding a new button
-addButton.addEventListener('click', openAddButtonModal);
+elements.addButton.addEventListener('click', openAddButtonModal);
 
 // Initial execution
 
@@ -281,5 +280,5 @@ fetch('/buttons.json')
 })
 .catch(err => {
   console.log(err);
-  showError("Could not load default buttons");
+  showError("Could not load default buttons", elements.errorText);
 });
