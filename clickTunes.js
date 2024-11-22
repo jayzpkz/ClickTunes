@@ -235,10 +235,8 @@ function handleDeleteButtonClick(deleteBtnId, soundId) {
     eventListeners: {
       click: () => {
         if(soundId !== 'json1' && soundId !== 'json2') {
-          removeSound(soundId).then(response => {
-            console.log(response);
-          }).catch(err => {
-            console.log(err);
+          removeSound(soundId).catch(err => {
+            console.error(err);
             messageContainer.textContent = "Error! Could not delete sound";
             messageContainer.classList.add("error");
             return;
@@ -283,12 +281,15 @@ function toggleButtonDelete() {
   const deleteButtonContainers = document.querySelectorAll('.button-container');
   deleteButtonContainers.forEach(container => {
     const button = container.querySelector('.button');
-    button.classList.toggle('tremble-in-fear');
+    if(button.id !== 'json1' && button.id !== 'json2') {
+      button.classList.toggle('tremble-in-fear');
+
+      const deleteButton = container.querySelector('.delete-btn');
+      deleteButton.classList.toggle("delete-mode-on");
+    }
 
     button.disabled = globalState.isDeleteModeOn;
 
-    const deleteButton = container.querySelector('.delete-btn');
-    deleteButton.classList.toggle("delete-mode-on");
   });
 }
 
@@ -309,6 +310,7 @@ function setVolume(audio) {
  *
  * @param {Object} buttonObj - An object containing the properties
  *                             of the button, including name and sound path.
+ * @param {string} buttonObj.id - The ID of the button.
  * @param {string} buttonObj.name - The name of the button.
  * @param {string} buttonObj.soundPath - The path to the sound file.
  */
@@ -346,29 +348,42 @@ function createButton(buttonObj) {
   // const deleteBtnText = createHtmlElement("span", {
   //   children: ["X"],
   // });
-  const deleteBtnId = `delete-button-${buttonObj.id}`;
-  const deleteBtn = createHtmlElement("button", {
-    attributes: {
-      class: "delete-btn",
-      id: deleteBtnId,
-      "data-name": buttonObj.name,
-      "aria-label": `Delete "${buttonObj.name}" button`,
-    },
-    children: [createHtmlElement("span", { children: ["X"] })], // deleteBtnText
-    eventListeners: {
-      click: () => handleDeleteButtonClick(deleteBtnId, buttonObj.id),
-    },
-  });
+  if (buttonObj.id !== "json1" && buttonObj.id !== "json2") {
+    const deleteBtnId = `delete-button-${buttonObj.id}`;
+    const deleteBtn = createHtmlElement("button", {
+      attributes: {
+        class: "delete-btn",
+        id: deleteBtnId,
+        "data-name": buttonObj.name,
+        "aria-label": `Delete "${buttonObj.name}" button`,
+      },
+      children: [createHtmlElement("span", { children: ["X"] })],
+      eventListeners: {
+        click: () => handleDeleteButtonClick(deleteBtnId, buttonObj.id),
+      },
+    });
 
-  const buttonContainer = createHtmlElement("div", {
-    attributes: {
-      "data-name": buttonObj.name,
-      class: "button-container",
-    },
-    children: [button, deleteBtn],
-  });
+    const buttonContainer = createHtmlElement("div", {
+      attributes: {
+        "data-name": buttonObj.name,
+        class: "button-container",
+      },
+      children: [button, deleteBtn],
+    });
 
-  elements.buttonsContainer.appendChild(buttonContainer);
+    elements.buttonsContainer.appendChild(buttonContainer);
+  } else {
+    // If the ID is json1 or json2, don't add the delete button
+    const buttonContainer = createHtmlElement("div", {
+      attributes: {
+        "data-name": buttonObj.name,
+        class: "button-container",
+      },
+      children: [button], // Only the button, no delete button
+    });
+
+    elements.buttonsContainer.appendChild(buttonContainer);
+  }
 }
 
 /**
@@ -479,6 +494,6 @@ fetch('/buttons.json')
   }
 })
 .catch(err => {
-  console.log(err);
+  console.error(err);
   showError("Could not load default buttons", elements.errorText);
 });
