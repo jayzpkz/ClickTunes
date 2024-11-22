@@ -1,5 +1,5 @@
 // Imports
-import { openDatabase, addSound, getAllSounds } from "./scripts/storage.js";
+import { getAllSounds, addSound, removeSound } from "./scripts/storage.js";
 import { debounce, showError, createHtmlElement } from "./scripts/utils.js";
 
 // Constants
@@ -35,7 +35,7 @@ const globalState = {
  * @param {HTMLElement} modalContainer - The modal container to close.
  * @param {HTMLElement} modalBackdrop - The modal backdrop to remove.
  */
-function closeAddButtonModal(modalContainer, modalBackdrop) {
+function closeModal(modalContainer, modalBackdrop) {
   document.body.removeChild(modalContainer);
   document.body.removeChild(modalBackdrop);
 }
@@ -45,13 +45,15 @@ function closeAddButtonModal(modalContainer, modalBackdrop) {
  */
 function openAddButtonModal() {
   elements.addButton.disabled = true;
+  elements.removeButton.disabled = true;
 
   const modalBackdrop = createHtmlElement("div", {
-    attributes: { class: "add-button-modal-backdrop" },
+    attributes: { class: "modal-backdrop" },
     eventListeners: {
       click: () => {
-        closeAddButtonModal(modalContainer, modalBackdrop);
+        closeModal(modalContainer, modalBackdrop);
         elements.addButton.disabled = false;
+        elements.removeButton.disabled = false;
       },
     },
   });
@@ -61,8 +63,9 @@ function openAddButtonModal() {
     children: ["X"],
     eventListeners: {
       click: () => {
-        closeAddButtonModal(modalContainer, modalBackdrop);
+        closeModal(modalContainer, modalBackdrop);
         elements.addButton.disabled = false;
+        elements.removeButton.disabled = false;
       },
     },
   });
@@ -77,7 +80,7 @@ function openAddButtonModal() {
 
   const soundFileLabel = createHtmlElement("label", {
     attributes: {
-      class: "add-button-sound-file-label",
+      class: "btn add-button-sound-file-label",
       type: "file",
       for: "sound-file-input"
     },
@@ -93,12 +96,12 @@ function openAddButtonModal() {
   });
 
   const messageContainer = createHtmlElement("div", {
-    attributes: { class: "add-button-message-container" },
+    attributes: { class: "modal-message-container" },
   });
 
   const formSubmitBtn = createHtmlElement("button", {
     attributes: {
-      class: "add-button-submit-btn",
+      class: "btn add-button-submit-btn",
       type: "button",
     },
     children: ["Add Sound"],
@@ -142,9 +145,11 @@ function openAddButtonModal() {
 
           // Save the sound to IndexedDB
           addSound({ name: soundName, soundPath: fileData })
-            .then(() => {
+            .then((soundId) => {
               messageContainer.textContent = "Sound added successfully!";
               messageContainer.classList.add("success");
+
+              createButton({ id: soundId, name: soundName, soundPath: fileData });
             })
             .catch((error) => {
               console.error("Error adding sound:", error);
@@ -170,12 +175,12 @@ function openAddButtonModal() {
   });
 
   const modal = createHtmlElement("div", {
-    attributes: { class: "add-button-modal" },
+    attributes: { class: "modal" },
     children: [modalCloseButton, form],
   });
 
   const modalContainer = createHtmlElement("div", {
-    attributes: { class: "add-button-modal-container" },
+    attributes: { class: "modal-container add-button-modal-container" },
     children: [modal],
   });
 
@@ -186,8 +191,83 @@ function openAddButtonModal() {
 /**
  * Deletes selected button
  */
-function handleDeleteButtonClick() {
+function handleDeleteButtonClick(deleteBtnId, soundId) {
+  const deleteButton = document.querySelector(`#${deleteBtnId}`);
 
+  if(deleteButton) {
+    deleteButton.disabled = true;
+  } else {
+    showError("Could not find selected delete button!");
+  }
+
+  const modalBackdrop = createHtmlElement("div", {
+    attributes: { class: "modal-backdrop" },
+    eventListeners: {
+      click: () => {
+        closeModal(modalContainer, modalBackdrop);
+        if(deleteButton) {
+          deleteButton.disabled = false;
+        }
+      },
+    },
+  });
+
+  const modalCancelButton = createHtmlElement("button", {
+    attributes: { class: "btn delete-cancel-btn" },
+    children: ["Cancel"],
+    eventListeners: {
+      click: () => {
+        closeModal(modalContainer, modalBackdrop);
+        if(deleteButton) {
+          deleteButton.disabled = false;
+        }
+      },
+    },
+  });
+
+  const messageContainer = createHtmlElement("div", {
+    attributes: { class: "modal-message-container" },
+  });
+
+  const modalDeleteButton = createHtmlElement("button", {
+    attributes: { class: "btn delete-confirm-btn" },
+    children: ["Delete"],
+    eventListeners: {
+      click: () => {
+        if(soundId !== 'json1' && soundId !== 'json2') {
+          removeSound(soundId).then(response => {
+            console.log(response);
+          }).catch(err => {
+            console.log(err);
+            messageContainer.textContent = "Error! Could not delete sound";
+            messageContainer.classList.add("error");
+            return;
+          });
+        }
+
+        // removes the whole button
+        deleteButton.parentElement.remove();
+
+        closeModal(modalContainer, modalBackdrop);
+        if(deleteButton) {
+          deleteButton.disabled = false;
+        }
+      },
+    },
+  });
+
+  const modal = createHtmlElement("div", {
+    attributes: { class: "modal remove-confirm-modal" },
+    children: [modalDeleteButton, modalCancelButton, messageContainer],
+  });
+
+  const modalContainer = createHtmlElement("div", {
+    attributes: { class: "modal-container delete-confirm-modal-container" },
+    children: [modal],
+  });
+
+  document.body.appendChild(modalBackdrop);
+  document.body.appendChild(modalContainer);
 }
 
 /**
@@ -198,10 +278,14 @@ function toggleButtonDelete() {
 
   elements.removeButton.textContent = globalState.isDeleteModeOn ? "Cancel" : "Remove Button"
 
+  elements.addButton.disabled = globalState.isDeleteModeOn;
+
   const deleteButtonContainers = document.querySelectorAll('.button-container');
   deleteButtonContainers.forEach(container => {
     const button = container.querySelector('.button');
     button.classList.toggle('tremble-in-fear');
+
+    button.disabled = globalState.isDeleteModeOn;
 
     const deleteButton = container.querySelector('.delete-btn');
     deleteButton.classList.toggle("delete-mode-on");
@@ -232,6 +316,7 @@ function createButton(buttonObj) {
   const button = createHtmlElement("button", {
     attributes: {
       name: buttonObj.name.replace(" ", ""),
+      id: buttonObj.id,
       "data-name": buttonObj.name,
       "aria-label": `Play Sound for "${buttonObj.name}" button`,
       class: "button",
@@ -261,16 +346,17 @@ function createButton(buttonObj) {
   // const deleteBtnText = createHtmlElement("span", {
   //   children: ["X"],
   // });
-
+  const deleteBtnId = `delete-button-${buttonObj.id}`;
   const deleteBtn = createHtmlElement("button", {
     attributes: {
       class: "delete-btn",
+      id: deleteBtnId,
       "data-name": buttonObj.name,
       "aria-label": `Delete "${buttonObj.name}" button`,
     },
     children: [createHtmlElement("span", { children: ["X"] })], // deleteBtnText
     eventListeners: {
-      click: () => handleDeleteButtonClick,
+      click: () => handleDeleteButtonClick(deleteBtnId, buttonObj.id),
     },
   });
 
@@ -375,8 +461,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }).catch(error => {
       console.error("Error during DOMContentLoaded:", error);
-      const messageContainer = document.querySelector(".add-button-message-container");
-      messageContainer.innerHTML = "An error occurred while loading sounds. Please try again later.";
+      showError("An error occurred while loading sounds. Please try again later.");
     });
 });
 

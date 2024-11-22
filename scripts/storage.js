@@ -4,7 +4,7 @@
  * Open or create the IndexedDB.
  * @returns {Promise<IDBDatabase>}
  */
-export function openDatabase() {
+function openDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open("ClickTunesDB", 1);
 
@@ -39,6 +39,24 @@ export function addSound(sound) {
       const transaction = db.transaction("Sounds", "readwrite");
       const store = transaction.objectStore("Sounds");
       const request = store.add(soundToSave);
+
+      request.onsuccess = (event) => resolve(event.target.result); // Get the generated key
+      request.onerror = (event) => reject(event.target.error);
+    });
+  });
+}
+
+/**
+ * Remove a sound from the database by ID.
+ * @param {number} soundId - The ID of the sound to remove
+ * @returns {Promise<void>}
+ */
+export function removeSound(soundId) {
+  return openDatabase().then((db) => {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction("Sounds", "readwrite");
+      const store = transaction.objectStore("Sounds");
+      const request = store.delete(soundId);
 
       request.onsuccess = () => resolve();
       request.onerror = (event) => reject(event.target.error);
