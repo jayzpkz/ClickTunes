@@ -82,6 +82,8 @@ body {
   background-color: #292a2d;
   color: #99b4e1;
   border: 1px solid #047db7;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .button:hover {
