@@ -367,6 +367,19 @@ elements.removeButton.addEventListener('click', toggleButtonDelete);
 // Add a click event listener to the add button to open the modal for adding a new button
 elements.addButton.addEventListener('click', openAddButtonModal);
 
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize the database
+  getAllSounds().then(data => {
+    if(data.length > 0) {
+      data.forEach(buttonObj => createButton(buttonObj));
+    }
+  }).catch(error => {
+      console.error("Error during DOMContentLoaded:", error);
+      const messageContainer = document.querySelector(".add-button-message-container");
+      messageContainer.innerHTML = "An error occurred while loading sounds. Please try again later.";
+    });
+});
+
 // Initial execution
 
 // Update the volume background to match the current volume slider value
