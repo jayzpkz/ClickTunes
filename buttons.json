@@ -8,5 +8,20 @@
     "id": "json2",
     "name": "Emotional Damage",
     "soundPath": "/sounds/emotional-dmg.ogg"
+  },
+  {
+    "id": "json3",
+    "name": "Free Bird Solo",
+    "soundPath": "/sounds/Free%20Bird.ogg"
+  },
+  {
+    "id": "json4",
+    "name": "The N Word",
+    "soundPath": "/sounds/the%20N%20word.ogg"
+  },
+  {
+    "id": "json5",
+    "name": "Crickets",
+    "soundPath": "/sounds/Crickets.ogg"
   }
 ]
